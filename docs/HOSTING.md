@@ -167,20 +167,30 @@ which kind your ticket bot makes.
    **Read Message History**.
 4. Copy the generated URL.
 
-Or build it by hand, substituting the application's client ID:
+Or build them by hand, substituting each application's client ID. **The two
+links differ on purpose.**
+
+Dev, for your private server. The permissions go on the bot's role
+server-wide, which is fine on a server only you use:
 
 ```
-https://discord.com/oauth2/authorize?client_id=CLIENT_ID&scope=bot+applications.commands&permissions=68608
+https://discord.com/oauth2/authorize?client_id=DEV_CLIENT_ID&scope=bot+applications.commands&permissions=68608
 ```
 
-Build one link per application. The dev link goes to your private server; the
-production link to PNWKC in [Part 5](#5-inviting-the-production-bot).
+Production, for PNWKC. **No permissions at all**:
 
-> Granting the permissions in the invite puts them on the bot's role
-> server-wide. That is the simplest route and it is what the checklist tests.
-> Tighter is to invite with no permissions (`permissions=0`) and grant the three
-> on the ticket category only, which is what [Part 6](#6-server-owner-setup)
-> does anyway. Either works; the category grant is the one that matters.
+```
+https://discord.com/oauth2/authorize?client_id=PROD_CLIENT_ID&scope=bot+applications.commands&permissions=0
+```
+
+Why zero for production: a server-wide View Channels would let the bot receive
+a message event from every public channel on PNWKC, and the one case where
+Discord sends content without the Message Content intent (a message that
+@mentions the bot) would widen from ticket channels to the whole server. With
+`permissions=0`, the only place the bot can see anything is the ticket category,
+through the overwrite the server owner adds in [Part 6](#6-server-owner-setup).
+That overwrite also means `/pose` run anywhere else fails in-band with "I can't
+see this channel", which is a second channel limit on top of the one in 6.2.
 
 ---
 
@@ -248,11 +258,22 @@ server administrators can see it.
 
 1. **Server Settings**, **Integrations**, then the pose bot.
 2. Under the `/pose` command, **Roles & Members**: add the Admin role.
-3. Under **Channels**: remove **All Channels** and add the ticket category or
-   channels.
+3. Under **Channels**: remove **All Channels** and add the ticket category.
+
+**Unverified: whether this picker accepts a category, and whether ticket
+channels created later inherit it.** Check by opening a new test ticket after
+this step and confirming `/pose` shows in it and not in an ordinary channel.
+
+If the picker only takes individual channels, it cannot cover tickets that do
+not exist yet. In that case leave **Channels** at **All Channels** and rely on
+the Admin role limit. The bot still cannot post outside the ticket category,
+because with the `permissions=0` invite it has no access anywhere else, so a
+stray `/pose` outside a ticket fails in the admin's own reply and posts
+nothing.
 
 Success: an Admin who is not a server administrator can see `/pose` in a ticket
-channel and cannot see it anywhere else.
+channel, and either cannot see it elsewhere or gets the "can't see this
+channel" reply there.
 
 ---
 
