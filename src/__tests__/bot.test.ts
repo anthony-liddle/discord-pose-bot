@@ -22,7 +22,7 @@ function setup(overrides: Partial<BotDeps> = {}) {
   } satisfies PoseSessions;
   const log = vi.fn();
   const handlePose = vi.fn(async () => {});
-  wireBot(client, { sessions, handlePose, log, ...overrides });
+  wireBot(client, { sessions, handlePose, log, exit: vi.fn(), ...overrides });
   return { client, sessions, log, handlePose };
 }
 

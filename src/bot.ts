@@ -13,6 +13,8 @@ export interface BotDeps {
   sessions: PoseSessions;
   handlePose: (interaction: ChatInputCommandInteraction) => Promise<void>;
   log: (event: string, ids: LogFields, code?: string) => void;
+  /** process.exit in production, injected so tests can observe it. */
+  exit: (code: number) => void;
 }
 
 /** Shown to the admin only, in their ephemeral reply. Never logged. */
@@ -123,6 +125,17 @@ export function wireBot(client: Client, deps: BotDeps): void {
       sessions.handleChannelDelete(thread.id);
     }),
   );
+
+  // An unrecoverable gateway close (a reset token, disallowed intents) emits
+  // shardDisconnect and discord.js does not reconnect. Left alone, the process
+  // stays up with no gateway, Fly sees a healthy machine, and /pose silently
+  // stops answering. Exit 1 so Fly restarts it, and a dead token shows up as
+  // a restart loop in `fly status`. Our own client.destroy() closes with 1000,
+  // which discord.js routes to shardReconnecting, so shutdown still exits 0.
+  client.on('shardDisconnect', (event) => {
+    log('shard_disconnect', {}, String(event.code));
+    deps.exit(1);
+  });
 
   // An EventEmitter 'error' with no listener throws, which would take the
   // process down.

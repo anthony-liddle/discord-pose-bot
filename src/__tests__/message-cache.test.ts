@@ -101,6 +101,7 @@ describe('messageCreate hands the sessions only three IDs', () => {
       },
       handlePose: vi.fn(),
       log: vi.fn(),
+      exit: vi.fn(),
     });
 
     const data = idPhotoMessage();

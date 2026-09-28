@@ -43,6 +43,7 @@ const sessions = createPoseSessions({
 wireBot(client, {
   sessions,
   log: logEvent,
+  exit: (code) => process.exit(code),
   handlePose: (interaction) =>
     handlePose(interaction, {
       sessions,
