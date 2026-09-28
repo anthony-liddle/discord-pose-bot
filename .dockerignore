@@ -1,0 +1,16 @@
+node_modules
+dist
+.git
+.github
+.husky
+docs
+coverage
+scripts
+
+# Never bake secrets into the image. The token belongs in the host's secret
+# store.
+.env
+.env.*
+*.log
+
+.DS_Store
