@@ -1,0 +1,36 @@
+# Fly.io configuration for the pose bot.
+#
+# This is a worker, not a website. It opens an outbound gateway connection to
+# Discord and listens on no port.
+#
+# DO NOT ADD AN [http_service] BLOCK. `fly launch` adds one automatically and it
+# has to be removed. With a service defined, Fly idles the machine when no HTTP
+# requests arrive, and no HTTP request will ever arrive here, so the machine
+# stops and /pose stops answering. Its internal_port also points health checks
+# at a port nothing is listening on. With no services defined, Fly has nothing
+# to idle and the machine runs continuously.
+#
+# There are no [[mounts]]. Nothing persists: timers live in memory and the pose
+# list ships in the image.
+
+# Placeholder. Replace with the globally unique name you pick at `fly launch`.
+app = 'REPLACE-ME-pose-bot'
+primary_region = 'sjc'
+
+[build]
+
+[env]
+  # Log timestamps only. Deadlines are rendered by Discord in each reader's own
+  # timezone, not from here.
+  TZ = 'UTC'
+  # Not a secret, so it lives here rather than in `fly secrets`.
+  POSE_TIMEOUT_MINUTES = '5'
+
+[[vm]]
+  size = 'shared-cpu-1x'
+  memory = '256mb'
+  cpus = 1
+
+# Never run more than one machine. Two instances would both answer every /pose,
+# so the member would get two poses and, five minutes later, two expiry
+# messages. Check with `fly status` and correct with `fly scale count 1`.
