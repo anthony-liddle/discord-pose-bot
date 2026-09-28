@@ -229,6 +229,72 @@ describe('replacing a live pose', () => {
     expect(sendExpiry).toHaveBeenCalledTimes(1);
   });
 
+  it('when the newer pose arrives second, strikes through the older one', async () => {
+    const { sessions, sendExpiry, markReplaced } = setup();
+    const older = pose({ messageId: '1000', pose: 'Give a thumbs up.' });
+    const newer = pose({ messageId: '2000', pose: 'Make a peace sign.' });
+
+    sessions.issue(older);
+    const result = sessions.issue(newer);
+
+    expect(result).toEqual({ replaced: true, superseded: false });
+    expect(markReplaced).toHaveBeenCalledTimes(1);
+    expect(markReplaced.mock.calls[0][0].messageId).toBe('1000');
+    expect(sessions.lastPose('chan-1')).toBe('Make a peace sign.');
+    expect(vi.getTimerCount()).toBe(1);
+    await vi.advanceTimersByTimeAsync(TIMEOUT_MS);
+    expect(sendExpiry).toHaveBeenCalledTimes(1);
+    expect(sendExpiry.mock.calls[0][0].messageId).toBe('2000');
+  });
+
+  it('when the older pose arrives second, keeps the newer one live and strikes through the older', async () => {
+    const { sessions, sendExpiry, markReplaced } = setup();
+    const older = pose({ messageId: '1000', pose: 'Give a thumbs up.' });
+    const newer = pose({ messageId: '2000', pose: 'Make a peace sign.' });
+
+    // Two admins; the newer message's send resolved first.
+    sessions.issue(newer);
+    const result = sessions.issue(older);
+
+    expect(result).toEqual({ replaced: false, superseded: true });
+    expect(markReplaced).toHaveBeenCalledTimes(1);
+    expect(markReplaced.mock.calls[0][0].messageId).toBe('1000');
+    // The newer pose stays armed and stays the channel's last pose.
+    expect(sessions.isLive('chan-1')).toBe(true);
+    expect(sessions.lastPose('chan-1')).toBe('Make a peace sign.');
+    expect(vi.getTimerCount()).toBe(1);
+    await vi.advanceTimersByTimeAsync(TIMEOUT_MS * 3);
+    expect(sendExpiry).toHaveBeenCalledTimes(1);
+    expect(sendExpiry.mock.calls[0][0].messageId).toBe('2000');
+  });
+
+  it('falls back to arrival order when IDs cannot be compared', () => {
+    const { sessions, markReplaced } = setup();
+    sessions.issue(pose({ messageId: 'not-a-snowflake-b' }));
+    const result = sessions.issue(pose({ messageId: 'not-a-snowflake-a' }));
+    expect(result).toEqual({ replaced: true, superseded: false });
+    expect(markReplaced.mock.calls[0][0].messageId).toBe('not-a-snowflake-b');
+  });
+
+  it('treats an equal ID as the incoming pose winning', () => {
+    const { sessions } = setup();
+    sessions.issue(pose({ messageId: '1000' }));
+    expect(sessions.issue(pose({ messageId: '1000' })).superseded).toBe(false);
+  });
+
+  it('a response after an out-of-order arrival still cancels the live pose', async () => {
+    const { sessions, sendExpiry } = setup();
+    sessions.issue(pose({ messageId: '2000' }));
+    sessions.issue(pose({ messageId: '1000' }));
+    sessions.handleMessage({
+      channelId: 'chan-1',
+      authorId: 'member-1',
+      messageId: '3000',
+    });
+    await vi.advanceTimersByTimeAsync(TIMEOUT_MS * 3);
+    expect(sendExpiry).not.toHaveBeenCalled();
+  });
+
   it('reports no replacement when nothing was live', () => {
     const { sessions, markReplaced } = setup();
     expect(sessions.issue(pose()).replaced).toBe(false);

@@ -53,12 +53,24 @@ export interface PoseSessions {
    * Arms a timer for a pose that has already been posted. Any live pose in the
    * same channel is cancelled first, synchronously, so exactly one expiry can
    * ever fire per channel no matter what the old message's edit does later.
+   *
+   * Order is by message, not by arrival. If the incoming pose's message is
+   * older than the live one (two admins, and the older send resolved second),
+   * the live pose stays armed and the incoming one is struck through instead,
+   * so "use the one below" always points at a real message.
    */
-  issue(pose: LivePose): { replaced: boolean };
+  issue(pose: LivePose): IssueResult;
   handleMessage(message: IncomingMessage): void;
   handleChannelDelete(channelId: string): void;
   lastPose(channelId: string): string | undefined;
   isLive(channelId: string): boolean;
+}
+
+export interface IssueResult {
+  /** A live, older pose in the channel was struck through for this one. */
+  replaced: boolean;
+  /** This pose was older than the live one, so it was struck through. */
+  superseded: boolean;
 }
 
 interface Session {
@@ -75,6 +87,19 @@ export function errorCode(err: unknown): string | undefined {
 
 function ids(pose: LivePose): LogIds {
   return { channelId: pose.channelId, userId: pose.targetId };
+}
+
+/**
+ * True only when the incoming message is provably older than the live one.
+ * Anything that cannot be compared falls back to arrival order, the incoming
+ * pose winning, which is how replacement worked before order was checked.
+ */
+function isOlder(incomingId: string, liveId: string): boolean {
+  try {
+    return BigInt(incomingId) < BigInt(liveId);
+  } catch {
+    return false;
+  }
 }
 
 function isAfter(messageId: string, poseMessageId: string): boolean {
@@ -130,6 +155,13 @@ export function createPoseSessions(deps: PoseSessionDeps): PoseSessions {
 
   return {
     issue(pose) {
+      const current = live.get(pose.channelId);
+      if (current && isOlder(pose.messageId, current.pose.messageId)) {
+        deps.log('pose_superseded', ids(pose));
+        attempt('mark_replaced_failed', pose, deps.markReplaced);
+        return { replaced: false, superseded: true };
+      }
+
       const previous = cancel(pose.channelId);
 
       const session: Session = { pose, handle: undefined };
@@ -143,7 +175,7 @@ export function createPoseSessions(deps: PoseSessionDeps): PoseSessions {
         deps.log('pose_replaced', ids(previous.pose));
         attempt('mark_replaced_failed', previous.pose, deps.markReplaced);
       }
-      return { replaced: previous !== undefined };
+      return { replaced: previous !== undefined, superseded: false };
     },
 
     handleMessage({ channelId, authorId, messageId }) {

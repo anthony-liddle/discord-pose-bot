@@ -82,6 +82,10 @@ export function poseConfirmation(
   return lines.join('\n');
 }
 
+export function poseSuperseded(targetId: string): string {
+  return `A newer pose for ${user(targetId)} was already posted in this channel, so yours was struck through and no timer was started for it. They should use the newer one.`;
+}
+
 export function targetIsBot(targetId: string): string {
   return `${user(targetId)} is a bot, so no pose was posted.`;
 }

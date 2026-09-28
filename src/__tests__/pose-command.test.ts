@@ -1,6 +1,7 @@
 import { MessageFlags } from 'discord.js';
 import type { ChatInputCommandInteraction } from 'discord.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import * as copy from '../copy';
 import { handlePose, type PoseCommandDeps } from '../pose-command';
 import { createPoseSessions, type LivePose } from '../sessions';
 import { MAX_POSE_LENGTH } from '../poses';
@@ -301,28 +302,60 @@ describe('a failed send', () => {
 });
 
 describe('overlapping /pose in one channel', () => {
-  it('ends with one live timer and exactly one expiry', async () => {
+  async function race(firstBack: 'older' | 'newer') {
     const { deps, sendExpiry, markReplaced } = makeDeps();
-    let resolveA!: (m: { id: string }) => void;
-    let resolveB!: (m: { id: string }) => void;
-    const a = fakeInteraction({
-      send: () => new Promise((r) => (resolveA = r)),
+    let resolveOlder!: (m: { id: string }) => void;
+    let resolveNewer!: (m: { id: string }) => void;
+    const older = fakeInteraction({
+      send: () => new Promise((r) => (resolveOlder = r)),
     });
-    const b = fakeInteraction({
-      send: () => new Promise((r) => (resolveB = r)),
+    const newer = fakeInteraction({
+      send: () => new Promise((r) => (resolveNewer = r)),
     });
 
-    const runA = handlePose(a.interaction, deps);
-    const runB = handlePose(b.interaction, deps);
+    const runOlder = handlePose(older.interaction, deps);
+    const runNewer = handlePose(newer.interaction, deps);
     await vi.advanceTimersByTimeAsync(0);
-    // B's send comes back first, then A's.
-    resolveB({ id: '2000' });
-    await vi.advanceTimersByTimeAsync(0);
-    resolveA({ id: '1000' });
-    await Promise.all([runA, runB]);
+    // Message 1000 was created first in the channel, 2000 second. Which send
+    // response reaches the bot first is up to the network.
+    if (firstBack === 'newer') {
+      resolveNewer({ id: '2000' });
+      await vi.advanceTimersByTimeAsync(0);
+      resolveOlder({ id: '1000' });
+    } else {
+      resolveOlder({ id: '1000' });
+      await vi.advanceTimersByTimeAsync(0);
+      resolveNewer({ id: '2000' });
+    }
+    await Promise.all([runOlder, runNewer]);
+    return { older, newer, sendExpiry, markReplaced };
+  }
 
-    expect(markReplaced).toHaveBeenCalledTimes(1);
-    await vi.advanceTimersByTimeAsync(TIMEOUT_MS * 3);
-    expect(sendExpiry).toHaveBeenCalledTimes(1);
+  it.each(['older', 'newer'] as const)(
+    'strikes through message 1000 and expires message 2000 when the %s send returns first',
+    async (firstBack) => {
+      const { sendExpiry, markReplaced } = await race(firstBack);
+
+      expect(markReplaced).toHaveBeenCalledTimes(1);
+      expect(markReplaced.mock.calls[0][0].messageId).toBe('1000');
+      await vi.advanceTimersByTimeAsync(TIMEOUT_MS * 3);
+      expect(sendExpiry).toHaveBeenCalledTimes(1);
+      expect(sendExpiry.mock.calls[0][0].messageId).toBe('2000');
+    },
+  );
+
+  it('tells the admin whose older pose lost that a newer one was already posted', async () => {
+    const { older, newer } = await race('newer');
+    expect(lastEditReply(older.raw).content).toBe(
+      copy.poseSuperseded('member-1'),
+    );
+    expect(lastEditReply(older.raw).allowedMentions).toEqual({ parse: [] });
+    expect(lastEditReply(newer.raw).content).toMatch(/^Posted a pose for/);
+  });
+
+  it('confirms normally to both admins when the sends return in order', async () => {
+    const { older, newer } = await race('older');
+    expect(lastEditReply(older.raw).content).toMatch(/^Posted a pose for/);
+    expect(lastEditReply(newer.raw).content).toMatch(/replaced the pose/);
   });
 });

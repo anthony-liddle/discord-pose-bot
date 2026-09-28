@@ -76,7 +76,7 @@ export async function handlePose(
     return;
   }
 
-  const { replaced } = deps.sessions.issue({
+  const { replaced, superseded } = deps.sessions.issue({
     channelId,
     targetId: target.id,
     messageId: message.id,
@@ -84,5 +84,11 @@ export async function handlePose(
     deadline,
   });
 
+  if (superseded) {
+    // Another admin's newer pose landed first. This one was struck through
+    // and no timer runs for it, so a normal confirmation would be wrong.
+    await reply(copy.poseSuperseded(target.id));
+    return;
+  }
   await reply(copy.poseConfirmation(target.id, pose, deadline, replaced));
 }
