@@ -20,33 +20,32 @@ Poses live in `poses.json` and change by pull request only. The bot validates
 the file at startup and refuses to start if it is invalid. `pnpm test` runs the
 same validation, so a bad list fails CI before it can ship.
 
-A pose exists for two reasons, and every pose must pass both:
+**The admin team owns the list.** Poses come from what admins use in real
+verification tickets. A pull request that adds, changes or removes a pose needs
+the admin team's agreement, and is judged against these rules:
 
-- **Liveness.** It proves the selfie was taken just now. It must be unlikely to
+- **Liveness is the aim for most poses.** A pose should ideally be unlikely to
   exist already in photos of the ID owner, from social media or a camera roll,
-  and impossible to produce by cropping or rotating an existing photo. Common
-  expressions, head tilts, waves and framing tricks fail this.
-- **Face match.** The admin matches the selfie against the ID photo, a neutral
-  frontal face. The pose must leave the face as easy to match as a neutral
-  selfie: facing the camera, eyes open and unshaded, features undistorted, and
-  the hand never covering the eyes or most of the nose or mouth. Expressions
-  fail this by definition.
+  so the selfie shows it was taken just now. Not every pose passes this. A few
+  common gestures, like a thumbs up or a peace sign, stay on the list on
+  purpose because admins use them regularly.
+- **Face match still holds.** The admin matches the selfie against the ID
+  photo, a neutral frontal face. Nothing that hides the eyes or distorts the
+  face compared with that photo.
+- **Props are held beside the face**, so the object is in frame with the face.
+  No "in your hand" variants.
+- **Every pair of poses must be distinguishable in a photo.** Picture the pair
+  as a mirrored, frontal, arm's-length selfie. Finger count counts as a
+  difference, so "one finger" and "two fingers" at the same spot are two poses.
+- **No "left" or "right."** Front cameras mirror the image, so an admin cannot
+  tell which side was meant. A test enforces this.
+- **Short, plain sentences.**
 
-Every pose must also be:
-
-- doable one-handed, with the other hand holding the phone
-- independent of any one specific ability, like full arm range, standing, or
-  fine finger control
-- free of props
-- impossible to read as sexual or flirtatious, including "cute selfie" gestures
-- short and plain, with no "left" or "right" (front cameras mirror the image;
-  a test enforces this)
-- **distinguishable from every other pose in a real selfie.** Picture the pair
-  as a mirrored, frontal, arm's-length photo. Location and hand shape can tell
-  two poses apart; side never can, and touching versus hovering never can. If
-  an admin could not tell them apart, only one stays.
-
-Fewer good poses beat more weak ones.
+Finger poses and props are fine. Not every pose works for every member, and
+that is what the last line of every pose message is for: "If this one doesn't
+work for you, just let us know and we'll send another." A member who cannot do a
+pose says so, which stops the clock, and the admin sends another, with the
+`custom` option if needed.
 
 ## Commit Messages
 
