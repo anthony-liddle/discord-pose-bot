@@ -56,6 +56,36 @@ describe('logEvent output', () => {
     ]);
   });
 
+  // Every combination of the four optional fields, 16 in all. The expected
+  // line is built independently from the fixed order: event, handler,
+  // channel, user, code.
+  const fields = [
+    { key: 'handler', label: 'handler', value: 'messageCreate' },
+    { key: 'channelId', label: 'channel', value: '10' },
+    { key: 'userId', label: 'user', value: '20' },
+    { key: 'code', label: 'code', value: '50013' },
+  ] as const;
+  const subsets = Array.from({ length: 16 }, (_, mask) =>
+    fields.filter((_, bit) => mask & (1 << bit)),
+  );
+
+  it.each(
+    subsets.map(
+      (subset) =>
+        [subset.map((f) => f.label).join('+') || 'none', subset] as const,
+    ),
+  )('prints exactly the fields given: %s', (_name, subset) => {
+    const ids: Record<string, string> = {};
+    let code: string | undefined;
+    for (const f of subset) {
+      if (f.key === 'code') code = f.value;
+      else ids[f.key] = f.value;
+    }
+    logEvent('e', ids, code);
+    const expected = ['event=e', ...subset.map((f) => `${f.label}=${f.value}`)];
+    expect(lines).toEqual([expected.join(' ')]);
+  });
+
   it('prints nothing it was not built to print, whatever it is handed', () => {
     const smuggled = {
       channelId: '10',
