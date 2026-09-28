@@ -29,6 +29,10 @@ jobs:
 
       - run: pnpm lint
 
+      # Prettier otherwise only runs through lint-staged, which a --no-verify
+      # commit skips.
+      - run: pnpm format:check
+
       - run: pnpm typecheck
 
       - run: pnpm test
