@@ -26,6 +26,11 @@ COPY --from=build /app/dist ./dist
 # validated at startup, and the bot refuses to start if it is invalid.
 COPY poses.json ./
 
+# Drop root. node:22-slim ships a `node` user, and everything under /app is
+# world-readable, so the bot needs nothing more. A compromised dependency then
+# runs without uid 0.
+USER node
+
 # Nothing persists. There is no volume and no DATA_DIR. Pose timers live in
 # memory and a restart drops them.
 
