@@ -82,7 +82,7 @@ describe('messageCreate', () => {
     ).not.toThrow();
     expect(log).toHaveBeenCalledWith(
       'handler_error',
-      { event: 'messageCreate' } as never,
+      { handler: 'messageCreate' },
       undefined,
     );
   });
@@ -142,10 +142,10 @@ describe('interactionCreate', () => {
       expect(log).toHaveBeenCalledWith(
         'handler_error',
         {
-          event: 'interactionCreate',
+          handler: 'interactionCreate',
           channelId: 'chan-1',
           userId: 'admin-1',
-        } as never,
+        },
         '50035',
       );
       expect(unhandled).not.toHaveBeenCalled();

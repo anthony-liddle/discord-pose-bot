@@ -459,18 +459,20 @@ fly logs            # live
 fly logs --no-tail  # recent, then exit
 ```
 
-Every line is an event type with a channel ID and user ID, and at most a
-Discord error code. Nothing else is logged, by design.
+Every line is an event type, plus at most a channel ID, a user ID, a Discord
+error code, and on `handler_error` lines the name of the handler that failed.
+Nothing else is logged, by design, and a test runs the real logger to hold it
+to that.
 
-| Line                                                  | Meaning                                                                                                  |
-| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `event=pose_issued channel=C user=U`                  | A pose was posted for member U in channel C, and the timer is running.                                   |
-| `event=pose_answered channel=C user=U`                | U posted in C before the deadline. Clock stopped.                                                        |
-| `event=pose_expired channel=C user=U`                 | The deadline passed. The expiry message is being sent.                                                   |
-| `event=pose_replaced channel=C user=U`                | A newer `/pose` in C replaced U's live pose.                                                             |
-| `event=pose_cleared_channel_deleted channel=C user=U` | The ticket was deleted mid-timer.                                                                        |
-| `event=pose_send_failed channel=C user=U code=50013`  | The pose could not be posted. `50013` is a missing permission, `50001` is no access. The admin was told. |
-| `event=expiry_send_failed ...`                        | The expiry message could not be sent. Usually the channel is gone.                                       |
-| `event=mark_replaced_failed ...`                      | The old pose could not be struck through. The new pose still went out and only it can expire.            |
-| `event=handler_error ...`                             | A handler threw. For `/pose`, the admin saw the error in their reply.                                    |
-| `event=unhandled_rejection`                           | Something failed outside any handler. The bot kept running.                                              |
+| Line                                                    | Meaning                                                                                                                                                                            |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `event=pose_issued channel=C user=U`                    | A pose was posted for member U in channel C, and the timer is running.                                                                                                             |
+| `event=pose_answered channel=C user=U`                  | U posted in C before the deadline. Clock stopped.                                                                                                                                  |
+| `event=pose_expired channel=C user=U`                   | The deadline passed. The expiry message is being sent.                                                                                                                             |
+| `event=pose_replaced channel=C user=U`                  | A newer `/pose` in C replaced U's live pose.                                                                                                                                       |
+| `event=pose_cleared_channel_deleted channel=C user=U`   | The ticket was deleted mid-timer.                                                                                                                                                  |
+| `event=pose_send_failed channel=C user=U code=50013`    | The pose could not be posted. `50013` is a missing permission, `50001` is no access. The admin was told.                                                                           |
+| `event=expiry_send_failed ...`                          | The expiry message could not be sent. Usually the channel is gone.                                                                                                                 |
+| `event=mark_replaced_failed ...`                        | The old pose could not be struck through. The new pose still went out and only it can expire.                                                                                      |
+| `event=handler_error handler=H channel=C user=U code=N` | Handler H threw (`interactionCreate`, `messageCreate`, `channelDelete` or `threadDelete`). Channel and user appear for `/pose`, where the admin also saw the error in their reply. |
+| `event=unhandled_rejection`                             | Something failed outside any handler. The bot kept running.                                                                                                                        |

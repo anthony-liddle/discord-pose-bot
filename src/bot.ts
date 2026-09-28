@@ -12,11 +12,7 @@ import { errorCode, type PoseSessions } from './sessions';
 export interface BotDeps {
   sessions: PoseSessions;
   handlePose: (interaction: ChatInputCommandInteraction) => Promise<void>;
-  log: (
-    event: string,
-    ids: LogFields & { event?: string },
-    code?: string,
-  ) => void;
+  log: (event: string, ids: LogFields, code?: string) => void;
 }
 
 /** Shown to the admin only, in their ephemeral reply. Never logged. */
@@ -40,10 +36,10 @@ function guarded<A extends unknown[]>(
   const fail = (err: unknown, args: A): void => {
     if (onError) {
       onError(err, ...args).catch(() => {
-        deps.log('handler_error', { event }, errorCode(err));
+        deps.log('handler_error', { handler: event }, errorCode(err));
       });
     } else {
-      deps.log('handler_error', { event }, errorCode(err));
+      deps.log('handler_error', { handler: event }, errorCode(err));
     }
   };
   return (...args: A) => {
@@ -77,7 +73,7 @@ export function wireBot(client: Client, deps: BotDeps): void {
         };
         log(
           'handler_error',
-          { event: 'interactionCreate', ...ids },
+          { handler: 'interactionCreate', ...ids },
           errorCode(err),
         );
         if (!interaction.isRepliable()) return;

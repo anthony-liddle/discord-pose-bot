@@ -49,7 +49,9 @@ it keeps:
 - **The `messageCreate` handler copies out three IDs** (channel, author,
   message) and keeps no reference to the message.
 - **Nothing reads message content, and nothing logs it.** Logs hold an event
-  type, a channel ID and a user ID, nothing else.
+  type, a channel ID, a user ID, a Discord error code, and the name of a
+  handler that failed, nothing else. A test runs the real logger and proves
+  anything else it is handed is never printed.
 
 So no cache and no code keeps a reference to a received message past the event.
 The object still sits in memory until garbage collection reclaims it, as any
