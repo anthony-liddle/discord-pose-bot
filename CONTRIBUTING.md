@@ -37,6 +37,10 @@ the admin team's agreement, and is judged against these rules:
 - **Every pair of poses must be distinguishable in a photo.** Picture the pair
   as a mirrored, frontal, arm's-length selfie. Finger count counts as a
   difference, so "one finger" and "two fingers" at the same spot are two poses.
+- **One-handed.** The member's other hand is holding the phone.
+- **Nothing sexual or flirtatious.** An admin is asking someone who is not
+  verified yet to pose for a photo. Irreverent is fine, which is why flipping
+  off the camera is on the list.
 - **No "left" or "right."** Front cameras mirror the image, so an admin cannot
   tell which side was meant. A test enforces this.
 - **Short, plain sentences.**
