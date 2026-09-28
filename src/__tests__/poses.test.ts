@@ -66,7 +66,30 @@ describe('validatePoses', () => {
 describe('the shipped poses.json', () => {
   it('passes the same validation the bot runs at startup', () => {
     const poses = loadPoses(path.join(__dirname, '..', '..', 'poses.json'));
-    expect(poses.length).toBeGreaterThanOrEqual(20);
+    // The list was cut to poses that pass the liveness and face match tests.
+    // Fewer good poses beat more weak ones, so the floor is 10, not 20.
+    expect(poses.length).toBeGreaterThanOrEqual(10);
+  });
+
+  it('never says "left" or "right", because front cameras mirror', () => {
+    const poses = loadPoses(path.join(__dirname, '..', '..', 'poses.json'));
+    const offenders = poses.filter((pose) => /\b(left|right)\b/i.test(pose));
+    expect(offenders).toEqual([]);
+  });
+});
+
+describe('the left or right check', () => {
+  // Proves the pattern above matches whole words only, in any case.
+  const sides = /\b(left|right)\b/i;
+
+  it('matches the words in any case', () => {
+    expect(sides.test('Raise your Left hand.')).toBe(true);
+    expect(sides.test('Tilt to the RIGHT.')).toBe(true);
+  });
+
+  it('does not match them inside other words', () => {
+    expect(sides.test('Squint into bright sun.')).toBe(false);
+    expect(sides.test('Stand upright.')).toBe(false);
   });
 });
 
