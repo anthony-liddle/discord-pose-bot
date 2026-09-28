@@ -119,9 +119,10 @@ export function createPoseSessions(deps: PoseSessionDeps): PoseSessions {
   }
 
   function expire(session: Session): void {
-    // Only the session still registered for the channel may fire. A replaced
-    // session's timer is cleared anyway; this is the second lock.
-    if (live.get(session.pose.channelId) !== session) return;
+    // Only a live session's timer can fire: every path that ends a session
+    // goes through cancel(), which clears the timer before deleting it. There
+    // is deliberately no second identity check here. One existed and hid a
+    // missing cancel from the tests.
     live.delete(session.pose.channelId);
     deps.log('pose_expired', ids(session.pose));
     attempt('expiry_send_failed', session.pose, deps.sendExpiry);

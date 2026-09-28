@@ -210,9 +210,8 @@ describe('replacing a live pose', () => {
     const result = sessions.issue(second);
 
     expect(result.replaced).toBe(true);
-    // The old timer is actually cleared, not just left to find itself stale
-    // when it fires. expire() has a second lock, so without this assertion the
-    // expiry counts below cannot tell whether the cancel happened.
+    // The old timer is actually cleared. This pins the cancel directly, as
+    // well as through the expiry counts below.
     expect(vi.getTimerCount()).toBe(1);
     expect(markReplaced).toHaveBeenCalledTimes(1);
     expect(markReplaced).toHaveBeenCalledWith(first);
