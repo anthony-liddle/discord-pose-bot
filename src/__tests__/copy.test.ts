@@ -59,6 +59,14 @@ describe('replaced pose message', () => {
   });
 });
 
+describe('superseded pose reply', () => {
+  it('tells the admin the member already has a newer pose', () => {
+    expect(copy.poseSuperseded('123')).toBe(
+      '<@123> already has a newer pose in this channel, so yours was struck through.',
+    );
+  });
+});
+
 describe('expiry message', () => {
   it('names the Admin role by mention when one is configured', () => {
     expect(copy.expiryMessage('123', '456')).toBe(
