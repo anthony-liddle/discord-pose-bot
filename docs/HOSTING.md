@@ -214,9 +214,10 @@ Everything in this part uses the **dev** application and your private server.
 
 4. Set `POSE_TIMEOUT_MINUTES=1` in `.env` while testing, so expiry does not take
    five minutes each time. Restart after changing it.
-5. Work through the manual checklist in the build report: issue a pose, let it
-   expire, respond in time, reply from a second account, replace a live pose,
-   delete the channel mid-timer.
+5. Work through [MANUAL-TEST.md](MANUAL-TEST.md), the single manual checklist:
+   issue a pose, let it expire, respond in time, reply from a second account,
+   replace a live pose, delete the channel mid-timer, reset the token, and the
+   rest. Items 16 and 17 come later, after Part 6 and Part 7.
 
 Stop the local process (Ctrl+C) before moving on. **Never leave it running
 while the production bot is live.**

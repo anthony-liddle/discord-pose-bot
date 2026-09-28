@@ -106,6 +106,7 @@ src/
   config.ts             environment validation
   index.ts              startup
 docs/HOSTING.md         runbook: applications, permissions, Fly, registration
+docs/MANUAL-TEST.md     the checks that need a real Discord connection
 ```
 
 ## Tech Stack

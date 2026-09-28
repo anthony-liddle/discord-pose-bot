@@ -1,0 +1,160 @@
+# Manual Test Checklist
+
+The checks that need a real Discord connection. Everything else is covered by
+`pnpm test`. This is the single list; it replaces the checklists in the build
+reports.
+
+## Setup
+
+- Use the **dev** application on your private test server only
+  ([HOSTING Part 4](HOSTING.md#4-testing-on-your-private-server)). Never the
+  production token.
+- Set `POSE_TIMEOUT_MINUTES=1` in `.env` so expiry takes a minute, and restart
+  after changing it.
+- Have a second Discord account as the member. A third account helps for
+  item 4.
+- Keep the bot's terminal visible. Log lines look like
+  `event=pose_issued channel=C user=U`.
+
+The message cache is always off, so every item below also checks that posting,
+striking through and replying work without it. Items 3, 4, 5, 8 and 10 passing
+on a real connection is the live confirmation of the gateway path the tests
+simulate.
+
+## The Messages, As They Should Read
+
+Pose message, random or custom:
+
+> @member Here's your pose for the selfie: **{pose}**
+> Post it in this channel by {time} ({relative time}).
+> If this one doesn't work for you, just let us know and we'll send another.
+
+Replaced pose, after a newer `/pose`:
+
+> @member Here's your pose for the selfie: ~~**{pose}**~~
+> This pose was replaced. Use the one below.
+
+Expiry, as a reply to the pose message:
+
+> @member That pose has expired. Tag @Admin whenever you're ready and we'll send
+> you a new one 💛
+
+With `ADMIN_ROLE_ID` unset, it reads "Tag an admin" instead of "Tag @Admin".
+
+## Core Flow
+
+1. **Issue a pose.** Run `/pose user:<member>`.
+   - Your ephemeral confirmation appears.
+   - The pose message pings only the member and reads as above.
+   - The deadline shows twice, as a local time and as a relative time.
+   - **The accessibility line is the last line**, after the deadline line.
+   - Log: `event=pose_issued`.
+2. **Let it expire.** Issue a pose and wait out the timer without responding.
+   - The expiry arrives on time, as a reply to the pose message.
+   - It pings the member. `@Admin` renders but does not ping; check from an
+     account that holds the role.
+   - The pose message's relative time now reads "... ago".
+   - This also shows the bot's own pose message does not stop the clock.
+   - Log: `event=pose_expired`.
+3. **Respond in time.** Issue a pose. The member posts anything, text or image,
+   before the deadline.
+   - Nothing visible happens, and no expiry follows when the deadline passes.
+   - Log: `event=pose_answered`.
+4. **Other people and other channels do not count.**
+   - Issue a pose. A different account posts in the channel. The expiry still
+     fires.
+   - Issue a pose. The member posts in a different channel. The expiry still
+     fires.
+
+## Replacement
+
+5. **Replace a live pose.** Issue a pose, then run `/pose` again before the
+   deadline.
+   - The first message is edited to the struck-through pose and "This pose was
+     replaced. Use the one below.", with no accessibility line, and pings no
+     one.
+   - The second message is a different pose. Your confirmation says it replaced
+     one.
+   - **Exactly one** expiry arrives, for the second pose, at its deadline.
+   - Logs: `event=pose_replaced`, then `event=pose_expired`.
+6. **Two admins at once (best effort).** Two admin accounts run `/pose` in the
+   same channel within a second of each other. Usually both arrive in order and
+   this looks like item 5. If the older message comes back second, it is the
+   one struck through, the newer stays live, and that admin's reply says a
+   newer pose was already posted. Log: `event=pose_superseded`. Hard to trigger
+   by hand; the tests cover both orders.
+
+## Custom Poses And Refusals
+
+7. **Custom pose and refusals.**
+   - `/pose user:<member> custom:Wave with **both** hands`: the custom text
+     shows, the asterisks show literally, and the accessibility line is still
+     last.
+   - `/pose user:<a bot>`: an ephemeral refusal, and nothing is posted.
+
+## Failure Paths
+
+8. **Deleted pose message.** Issue a pose, delete the pose message itself, and
+   let it expire.
+   - The expiry still arrives, as a plain message rather than a reply.
+   - No `event=expiry_send_failed` in the log.
+9. **Delete the channel mid-timer.** Issue a pose and delete the channel before
+   the deadline.
+   - No error at the deadline.
+   - Log: `event=pose_cleared_channel_deleted`.
+10. **Missing Send Messages is reported in-band.** Remove Send Messages from the
+    bot in the channel, then run `/pose`.
+    - Your ephemeral reply says a permission is missing and no timer was
+      started.
+    - Log: `event=pose_send_failed code=50013`. Restore the permission.
+11. **Read Message History is needed.** Remove Read Message History from the
+    bot in the channel, issue a pose and let it expire.
+    - The pose posts, but the expiry fails with
+      `event=expiry_send_failed code=50013`.
+    - Restore the permission. This proves the permission is required.
+
+## Privacy
+
+12. **A tagged ID message leaves nothing behind.** The member posts an image
+    and @mentions the bot in the same message. This is the one case where
+    Discord sends the bot content. Only `event=pose_answered` appears in the
+    logs, with no text, filename or link.
+
+## Operations
+
+13. **Restart visibility.** Issue a pose, stop the bot with Ctrl+C before the
+    deadline, and restart it.
+    - No expiry arrives.
+    - The pose message's relative time visibly runs past the deadline.
+14. **A reset token makes the process exit.** With the bot running, open the dev
+    application in the Developer Portal, **Bot**, and **Reset Token**.
+    - Within a short time the process exits with status 1, after
+      `event=shard_disconnect code=4004`. Check with `echo $?` after it stops.
+    - It does not stay up silently. On Fly this shows as a restart loop in
+      `fly status`.
+    - Put the new token in `.env` before starting it again.
+    - If nothing happens for several minutes, note it: Discord may only close
+      the session on the next reconnect.
+15. **Shutdown still exits 0.** Start the bot and stop it with Ctrl+C.
+    - Log: `event=shutdown`, and `echo $?` prints 0.
+    - There is no `event=shard_disconnect`.
+
+## Server Setup
+
+16. **Channel limit.** In Integrations, limit `/pose` to a category. Create a
+    channel inside that category and an ordinary channel outside it.
+    - As a non-administrator with the Admin role, `/pose` shows in the first
+      channel and not the second.
+    - If the picker will not take a category, follow the fallback in
+      [HOSTING 6.2](HOSTING.md#62-open-pose-to-admins-in-ticket-channels-only).
+
+## After Deploying To Fly
+
+17. **The machine runs as the `node` user.** Run `fly ssh console -C id`.
+    - It prints `uid=1000(node) gid=1000(node)`, not `uid=0(root)`.
+    - `fly status` shows exactly one machine, started.
+
+## Before Relying On It At PNWKC
+
+- Open a real test ticket and confirm the bot's role carries into it.
+- Find out whether closing a ticket deletes the channel or archives it.
