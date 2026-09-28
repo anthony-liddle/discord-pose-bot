@@ -126,8 +126,10 @@ With `ADMIN_ROLE_ID` unset, it reads "Tag an admin" instead of "Tag @Admin".
     deadline, and restart it.
     - No expiry arrives.
     - The pose message's relative time visibly runs past the deadline.
-14. **A reset token makes the process exit.** With the bot running, open the dev
-    application in the Developer Portal, **Bot**, and **Reset Token**.
+14. **A reset token makes the process exit.** Start the bot with
+    `node dist/src/index.js` rather than `pnpm start`, so `echo $?` reports the
+    bot's own exit code and not pnpm's. Then open the dev application in the
+    Developer Portal, **Bot**, and **Reset Token**.
     - Within a short time the process exits with status 1, after
       `event=shard_disconnect code=4004`. Check with `echo $?` after it stops.
     - It does not stay up silently. On Fly this shows as a restart loop in
@@ -135,7 +137,8 @@ With `ADMIN_ROLE_ID` unset, it reads "Tag an admin" instead of "Tag @Admin".
     - Put the new token in `.env` before starting it again.
     - If nothing happens for several minutes, note it: Discord may only close
       the session on the next reconnect.
-15. **Shutdown still exits 0.** Start the bot and stop it with Ctrl+C.
+15. **Shutdown still exits 0.** Start the bot with `node dist/src/index.js` and
+    stop it with Ctrl+C.
     - Log: `event=shutdown`, and `echo $?` prints 0.
     - There is no `event=shard_disconnect`.
 
@@ -150,8 +153,15 @@ With `ADMIN_ROLE_ID` unset, it reads "Tag an admin" instead of "Tag @Admin".
 
 ## After Deploying To Fly
 
-17. **The machine runs as the `node` user.** Run `fly ssh console -C id`.
-    - It prints `uid=1000(node) gid=1000(node)`, not `uid=0(root)`.
+17. **The bot runs as the `node` user.** `fly ssh console -C id` is not the
+    check: `fly ssh` logs in as root by default and reports its own session.
+    Read the bot process's user instead:
+
+    ```bash
+    fly ssh console -C "sh -c 'for p in /proc/[0-9]*; do [ \"\$(cat \$p/comm 2>/dev/null)\" = node ] && grep ^Uid: \$p/status; done'"
+    ```
+
+    - One line, `Uid:	1000	1000	1000	1000`. A `0` means it runs as root.
     - `fly status` shows exactly one machine, started.
 
 ## Before Relying On It At PNWKC

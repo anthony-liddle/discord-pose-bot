@@ -217,7 +217,7 @@ Everything in this part uses the **dev** application and your private server.
 5. Work through [MANUAL-TEST.md](MANUAL-TEST.md), the single manual checklist:
    issue a pose, let it expire, respond in time, reply from a second account,
    replace a live pose, delete the channel mid-timer, reset the token, and the
-   rest. Items 16 and 17 come later, after Part 6 and Part 7.
+   rest. Item 17 comes later, after [Part 7](#7-deploying-to-fly).
 
 Stop the local process (Ctrl+C) before moving on. **Never leave it running
 while the production bot is live.**
@@ -374,10 +374,19 @@ Then:
 fly status
 ```
 
-It should show **one** machine, **started**, running as the `node` user rather
-than root (check with `fly ssh console -C id`, which should print
-`uid=1000(node)`). `stopped` means an `[http_service]` block survived; go back
-to 7.2.
+It should show **one** machine, **started**. `stopped` means an
+`[http_service]` block survived; go back to 7.2.
+
+Then confirm the bot runs as the `node` user, not root. `fly ssh console -C id`
+will **not** tell you: `fly ssh` logs in as root by default, so it reports the
+SSH session. Read the bot process's own user instead:
+
+```bash
+fly ssh console -C "sh -c 'for p in /proc/[0-9]*; do [ \"\$(cat \$p/comm 2>/dev/null)\" = node ] && grep ^Uid: \$p/status; done'"
+```
+
+Expected: one line, `Uid:	1000	1000	1000	1000`. A `0` there means the
+process runs as root.
 
 ---
 
