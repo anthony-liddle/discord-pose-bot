@@ -31,6 +31,14 @@ export function escapeMarkdown(text: string): string {
   return text.replace(/([\\*_~`|>])/g, '\\$1');
 }
 
+/**
+ * The last line of every live pose message, random or custom. The member's
+ * reply stops the clock, which is the intended outcome: an admin then sends
+ * another pose. The struck-through replaced version does not carry it.
+ */
+export const ACCESSIBILITY_LINE =
+  "If this one doesn't work for you, just let us know and we'll send another.";
+
 export function poseMessage(
   targetId: string,
   pose: string,
@@ -38,14 +46,15 @@ export function poseMessage(
 ): string {
   return (
     `${user(targetId)} Here's your pose for the selfie: **${escapeMarkdown(pose)}**\n` +
-    `Post it in this channel by ${shortTime(deadline)} (${relativeTime(deadline)}).`
+    `Post it in this channel by ${shortTime(deadline)} (${relativeTime(deadline)}).\n` +
+    ACCESSIBILITY_LINE
   );
 }
 
 export function replacedPoseMessage(targetId: string, pose: string): string {
   return (
     `${user(targetId)} Here's your pose for the selfie: ~~**${escapeMarkdown(pose)}**~~\n` +
-    `A newer pose replaced this one. Use the newest pose instead.`
+    'This pose was replaced. Use the one below.'
   );
 }
 

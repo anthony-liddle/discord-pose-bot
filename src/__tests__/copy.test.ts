@@ -14,13 +14,24 @@ const LONGEST_ID = '1'.repeat(20);
 const FAR_DEADLINE = Date.UTC(2999, 0, 1);
 
 describe('pose message', () => {
-  it('pings the member, bolds the pose and renders the deadline twice', () => {
+  it('pings the member, bolds the pose, renders the deadline twice and closes on the accessibility line', () => {
     const deadline = Date.UTC(2026, 8, 28, 22, 45, 0);
     const seconds = deadline / 1000;
     expect(copy.poseMessage('123', 'Close both eyes.', deadline)).toBe(
       `<@123> Here's your pose for the selfie: **Close both eyes.**\n` +
-        `Post it in this channel by <t:${seconds}:t> (<t:${seconds}:R>).`,
+        `Post it in this channel by <t:${seconds}:t> (<t:${seconds}:R>).\n` +
+        `If this one doesn't work for you, just let us know and we'll send another.`,
     );
+  });
+
+  it('ends every pose message, random or custom, on the accessibility line', () => {
+    for (const pose of ['Cover one ear with your hand.', 'Wave **twice**']) {
+      const lines = copy.poseMessage('1', pose, 1000).split('\n');
+      expect(lines[lines.length - 1]).toBe(copy.ACCESSIBILITY_LINE);
+      expect(lines[lines.length - 1]).toBe(
+        "If this one doesn't work for you, just let us know and we'll send another.",
+      );
+    }
   });
 
   it('rounds a deadline with milliseconds up to the next whole second', () => {
@@ -34,11 +45,17 @@ describe('pose message', () => {
 });
 
 describe('replaced pose message', () => {
-  it('strikes through the pose and says a newer one replaced it', () => {
-    const text = copy.replacedPoseMessage('123', 'Close both eyes.');
-    expect(text).toContain('<@123>');
-    expect(text).toContain('~~**Close both eyes.**~~');
-    expect(text).toMatch(/newer pose replaced this one/);
+  it('strikes through the pose and points at the one below', () => {
+    expect(copy.replacedPoseMessage('123', 'Close both eyes.')).toBe(
+      "<@123> Here's your pose for the selfie: ~~**Close both eyes.**~~\n" +
+        'This pose was replaced. Use the one below.',
+    );
+  });
+
+  it('does not carry the accessibility line', () => {
+    expect(copy.replacedPoseMessage('123', 'Close both eyes.')).not.toContain(
+      copy.ACCESSIBILITY_LINE,
+    );
   });
 });
 
