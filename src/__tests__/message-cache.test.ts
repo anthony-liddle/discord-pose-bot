@@ -167,8 +167,8 @@ describe('issue, replace and expire all work by reference with the cache off', (
     const deps = {
       sessions,
       poses: [
-        'Cover one ear with your hand.',
-        'Touch the tip of your nose with one finger.',
+        'Touch your nose with one finger.',
+        'Touch your nose with two fingers.',
       ],
       random: () => 0,
       now: () => Date.now(),

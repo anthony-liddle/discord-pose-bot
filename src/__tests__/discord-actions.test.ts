@@ -7,7 +7,7 @@ const pose: LivePose = {
   channelId: 'chan-1',
   targetId: 'member-1',
   messageId: '1000',
-  pose: 'Close both eyes.',
+  pose: 'Give a thumbs up.',
   deadline: 0,
 };
 
@@ -60,7 +60,7 @@ describe('markReplaced', () => {
     const channel = fakeChannel();
     await makeDiscordActions(fakeClient(channel), undefined).markReplaced(pose);
     expect(channel.messages.edit).toHaveBeenCalledWith('1000', {
-      content: expect.stringContaining('~~**Close both eyes.**~~'),
+      content: expect.stringContaining('~~**Give a thumbs up.**~~'),
       allowedMentions: { parse: [], users: ['member-1'] },
     });
   });

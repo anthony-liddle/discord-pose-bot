@@ -66,8 +66,8 @@ describe('validatePoses', () => {
 describe('the shipped poses.json', () => {
   it('passes the same validation the bot runs at startup', () => {
     const poses = loadPoses(path.join(__dirname, '..', '..', 'poses.json'));
-    // The list was cut to poses that pass the liveness and face match tests.
-    // Fewer good poses beat more weak ones, so the floor is 10, not 20.
+    // The admin team owns the list. The floor only catches a list that was
+    // truncated by accident, not a judgement on how many poses is enough.
     expect(poses.length).toBeGreaterThanOrEqual(10);
   });
 

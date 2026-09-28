@@ -90,7 +90,7 @@ function makeDeps(overrides: Partial<PoseCommandDeps> = {}) {
   });
   const deps: PoseCommandDeps = {
     sessions,
-    poses: ['Close both eyes.', 'Puff out your cheeks.'],
+    poses: ['Give a thumbs up.', 'Make a peace sign.'],
     random: () => 0,
     now: () => Date.now(),
     timeoutMs: TIMEOUT_MS,
@@ -206,7 +206,7 @@ describe('the pose message', () => {
     const { interaction, send } = fakeInteraction({ custom: '   ' });
     await handlePose(interaction, makeDeps().deps);
     const payload = send.mock.calls[0][0] as { content: string };
-    expect(payload.content).toContain('**Close both eyes.**');
+    expect(payload.content).toContain('**Give a thumbs up.**');
   });
 
   it('never repeats the pose last issued in the channel', async () => {
@@ -217,8 +217,8 @@ describe('the pose message', () => {
     await handlePose(second.interaction, deps);
     const a = (first.send.mock.calls[0][0] as { content: string }).content;
     const b = (second.send.mock.calls[0][0] as { content: string }).content;
-    expect(a).toContain('Close both eyes.');
-    expect(b).toContain('Puff out your cheeks.');
+    expect(a).toContain('Give a thumbs up.');
+    expect(b).toContain('Make a peace sign.');
   });
 
   it('shows the same deadline the timer uses', async () => {

@@ -210,7 +210,7 @@ Everything in this part uses the **dev** application and your private server.
    ```
 
    Success: `Registered. /pose should appear in that server right away.`, then
-   `event=ready user=<id>` and `Loaded 11 poses. Timeout 5 minutes.`
+   `event=ready user=<id>` and `Loaded 32 poses. Timeout 5 minutes.`
 
 4. Set `POSE_TIMEOUT_MINUTES=1` in `.env` while testing, so expiry does not take
    five minutes each time. Restart after changing it.
@@ -356,7 +356,7 @@ Expected:
 
 ```
 event=ready user=<bot user id>
-Loaded 11 poses. Timeout 5 minutes.
+Loaded 32 poses. Timeout 5 minutes.
 ```
 
 A `Refusing to start:` line names exactly what is wrong: a missing

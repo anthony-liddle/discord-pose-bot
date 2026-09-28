@@ -34,7 +34,7 @@ function pose(overrides: Partial<LivePose> = {}): LivePose {
     channelId: 'chan-1',
     targetId: 'member-1',
     messageId: '1000',
-    pose: 'Close both eyes.',
+    pose: 'Give a thumbs up.',
     deadline: Date.now() + TIMEOUT_MS,
     ...overrides,
   };
@@ -202,11 +202,11 @@ describe('responding', () => {
 describe('replacing a live pose', () => {
   it('cancels the old timer, marks the old message, and only one expiry fires', async () => {
     const { sessions, sendExpiry, markReplaced } = setup();
-    const first = pose({ messageId: '1000', pose: 'Close both eyes.' });
+    const first = pose({ messageId: '1000', pose: 'Give a thumbs up.' });
     sessions.issue(first);
 
     await vi.advanceTimersByTimeAsync(60_000);
-    const second = pose({ messageId: '2000', pose: 'Puff out your cheeks.' });
+    const second = pose({ messageId: '2000', pose: 'Make a peace sign.' });
     const result = sessions.issue(second);
 
     expect(result.replaced).toBe(true);
@@ -288,7 +288,7 @@ describe('ticket closed', () => {
   it('channel delete clears the timer and the last-pose memory', async () => {
     const { sessions, sendExpiry } = setup();
     sessions.issue(pose());
-    expect(sessions.lastPose('chan-1')).toBe('Close both eyes.');
+    expect(sessions.lastPose('chan-1')).toBe('Give a thumbs up.');
 
     sessions.handleChannelDelete('chan-1');
 
@@ -302,7 +302,7 @@ describe('ticket closed', () => {
     const { sessions } = setup();
     sessions.issue(pose());
     await vi.advanceTimersByTimeAsync(TIMEOUT_MS);
-    expect(sessions.lastPose('chan-1')).toBe('Close both eyes.');
+    expect(sessions.lastPose('chan-1')).toBe('Give a thumbs up.');
     sessions.handleChannelDelete('chan-1');
     expect(sessions.lastPose('chan-1')).toBeUndefined();
   });
@@ -319,13 +319,13 @@ describe('ticket closed', () => {
 describe('last pose memory', () => {
   it('remembers the last pose after it is answered, so a re-roll differs', () => {
     const { sessions } = setup();
-    sessions.issue(pose({ pose: 'Close both eyes.' }));
+    sessions.issue(pose({ pose: 'Give a thumbs up.' }));
     sessions.handleMessage({
       channelId: 'chan-1',
       authorId: 'member-1',
       messageId: '2000',
     });
-    expect(sessions.lastPose('chan-1')).toBe('Close both eyes.');
+    expect(sessions.lastPose('chan-1')).toBe('Give a thumbs up.');
   });
 });
 

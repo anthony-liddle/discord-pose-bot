@@ -17,15 +17,15 @@ describe('pose message', () => {
   it('pings the member, bolds the pose, renders the deadline twice and closes on the accessibility line', () => {
     const deadline = Date.UTC(2026, 8, 28, 22, 45, 0);
     const seconds = deadline / 1000;
-    expect(copy.poseMessage('123', 'Close both eyes.', deadline)).toBe(
-      `<@123> Here's your pose for the selfie: **Close both eyes.**\n` +
+    expect(copy.poseMessage('123', 'Give a thumbs up.', deadline)).toBe(
+      `<@123> Here's your pose for the selfie: **Give a thumbs up.**\n` +
         `Post it in this channel by <t:${seconds}:t> (<t:${seconds}:R>).\n` +
         `If this one doesn't work for you, just let us know and we'll send another.`,
     );
   });
 
   it('ends every pose message, random or custom, on the accessibility line', () => {
-    for (const pose of ['Cover one ear with your hand.', 'Wave **twice**']) {
+    for (const pose of ['Touch your nose with one finger.', 'Wave **twice**']) {
       const lines = copy.poseMessage('1', pose, 1000).split('\n');
       expect(lines[lines.length - 1]).toBe(copy.ACCESSIBILITY_LINE);
       expect(lines[lines.length - 1]).toBe(
@@ -46,14 +46,14 @@ describe('pose message', () => {
 
 describe('replaced pose message', () => {
   it('strikes through the pose and points at the one below', () => {
-    expect(copy.replacedPoseMessage('123', 'Close both eyes.')).toBe(
-      "<@123> Here's your pose for the selfie: ~~**Close both eyes.**~~\n" +
+    expect(copy.replacedPoseMessage('123', 'Give a thumbs up.')).toBe(
+      "<@123> Here's your pose for the selfie: ~~**Give a thumbs up.**~~\n" +
         'This pose was replaced. Use the one below.',
     );
   });
 
   it('does not carry the accessibility line', () => {
-    expect(copy.replacedPoseMessage('123', 'Close both eyes.')).not.toContain(
+    expect(copy.replacedPoseMessage('123', 'Give a thumbs up.')).not.toContain(
       copy.ACCESSIBILITY_LINE,
     );
   });
@@ -129,7 +129,7 @@ describe('no em dashes', () => {
       // around the interpolations is exercised.
       const out = (value as (...args: unknown[]) => unknown)(
         LONGEST_ID,
-        'Close both eyes.',
+        'Give a thumbs up.',
         FAR_DEADLINE,
         true,
       );
