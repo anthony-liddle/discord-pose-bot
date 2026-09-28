@@ -342,8 +342,12 @@ Success: `fly secrets list` shows the names with digests, never the values.
 ### 7.4 Deploy
 
 ```bash
-fly deploy
+fly deploy --ha=false
 ```
+
+`--ha=false` stops Fly creating a second, standby machine on the first deploy.
+Two machines is the failure [Part 9](#9-the-one-machine-rule) exists to
+prevent: both would answer every `/pose`.
 
 **`fly deploy` reporting success is not proof.** Fly counts a started machine as
 a success even if the process exits a second later. Check the log:
@@ -369,8 +373,10 @@ Then:
 fly status
 ```
 
-It should show **one** machine, **started**. `stopped` means an
-`[http_service]` block survived; go back to 7.2.
+It should show **one** machine, **started**, running as the `node` user rather
+than root (check with `fly ssh console -C id`, which should print
+`uid=1000(node)`). `stopped` means an `[http_service]` block survived; go back
+to 7.2.
 
 ---
 
@@ -436,7 +442,7 @@ fly scale count 1
 1. Edit `poses.json` on a branch. `pnpm test` runs the same validation the bot
    runs at startup: non-empty, no blanks, no duplicates, each at most 200
    characters.
-2. Merge, then `fly deploy`.
+2. Merge, then `fly deploy --ha=false`.
 
 **A deploy restarts the bot and drops every live timer.** Poses issued before
 the deploy never get an expiry message. Their deadline still shows in the
@@ -447,7 +453,7 @@ To roll back, find the previous release and redeploy its image:
 
 ```bash
 fly releases --image
-fly deploy --image <previous image ref>
+fly deploy --ha=false --image <previous image ref>
 ```
 
 ---
