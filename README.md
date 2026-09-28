@@ -19,7 +19,11 @@ still does the actual ID match. The bot only hands out poses and runs the clock.
 - A random pose from `poses.json`, never the same as the last one issued in that
   channel. `custom` lets an admin give an alternative on the spot.
 - A deadline shown as a local time and a live relative time.
-- Any message from the member in that channel stops the clock.
+- Any message from the member in that channel, posted after the pose, stops
+  the clock. That includes a reply to the pose message's last line, "If this
+  one doesn't work for you, just let us know and we'll send another." A member
+  asking for a different pose stops the clock on purpose: the admin then sends
+  another one, with `custom` if needed.
 - Running `/pose` again in the same channel replaces the live pose, strikes the
   old one through, and restarts the clock. Only one expiry can ever fire per
   channel.
@@ -34,9 +38,23 @@ empty, so the bot never receives the ID photos. It sees that the member posted,
 and that is all it needs. A test pins the intent list.
 
 One exception is Discord's, not the bot's: a message that @mentions the bot
-arrives with its content and attachments even without the intent. The bot does
-not read, store, or log message content in any case. Logs hold an event type,
-a channel ID and a user ID, nothing else.
+arrives with its content and attachments even without the intent. Discord still
+sends it, and nothing in this bot can stop that. What the bot controls is what
+it keeps:
+
+- **The discord.js message cache is off.** By default discord.js keeps the last
+  200 messages per channel, which would hold a tagged ID message, its photo
+  link included, until evicted. The client is built with a message cache of
+  zero, which covers every place discord.js stores a received message.
+- **The `messageCreate` handler copies out three IDs** (channel, author,
+  message) and keeps no reference to the message.
+- **Nothing reads message content, and nothing logs it.** Logs hold an event
+  type, a channel ID and a user ID, nothing else.
+
+So no cache and no code keeps a reference to a received message past the event.
+The object still sits in memory until garbage collection reclaims it, as any
+short-lived value does. Tests pin the intents, the zero message cache, and the
+three-ID handoff, on the same client production builds.
 
 ## Timers Live In Memory
 
