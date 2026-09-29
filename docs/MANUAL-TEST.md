@@ -26,7 +26,7 @@ simulate.
 Pose message, random or custom:
 
 > @member Here's your pose for the selfie: **{pose}**
-> Post it in this channel by {time} ({relative time}).
+> Post it in this channel within {n} minutes, by {time}.
 > If this one doesn't work for you, just let us know and we'll send another.
 
 Replaced pose, after a newer `/pose`:
@@ -46,14 +46,16 @@ With `ADMIN_ROLE_ID` unset, it reads "Tag an admin" instead of "Tag @Admin".
 1. **Issue a pose.** Run `/pose user:<member>`.
    - Your ephemeral confirmation appears.
    - The pose message pings only the member and reads as above.
-   - The deadline shows twice, as a local time and as a relative time.
+   - The deadline line names the window from `POSE_TIMEOUT_MINUTES` ("within
+     1 minute" with the setup above) and a fixed local time.
    - **The accessibility line is the last line**, after the deadline line.
    - Log: `event=pose_issued`.
 2. **Let it expire.** Issue a pose and wait out the timer without responding.
    - The expiry arrives on time, as a reply to the pose message.
    - It pings the member. `@Admin` renders but does not ping; check from an
      account that holds the role.
-   - The pose message's relative time now reads "... ago".
+   - The pose message is unchanged after expiry: no edit, and the deadline
+     line reads exactly as it did.
    - This also shows the bot's own pose message does not stop the clock.
    - Log: `event=pose_expired`.
 3. **Respond in time.** Issue a pose. The member posts anything, text or image,
@@ -125,7 +127,8 @@ With `ADMIN_ROLE_ID` unset, it reads "Tag an admin" instead of "Tag @Admin".
 13. **Restart visibility.** Issue a pose, stop the bot with Ctrl+C before the
     deadline, and restart it.
     - No expiry arrives.
-    - The pose message's relative time visibly runs past the deadline.
+    - The pose message is unchanged. Its deadline is now in the past with no
+      expiry under it, which is the only sign the timer was lost.
 14. **A reset token makes the process exit.** Start the bot with
     `node dist/src/index.js` rather than `pnpm start`, so `echo $?` reports the
     bot's own exit code and not pnpm's. Then open the dev application in the

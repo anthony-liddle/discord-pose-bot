@@ -18,7 +18,8 @@ still does the actual ID match. The bot only hands out poses and runs the clock.
   to Administrator until the server owner opens it up.
 - A random pose from `poses.json`, never the same as the last one issued in that
   channel. `custom` lets an admin give an alternative on the spot.
-- A deadline shown as a local time and a live relative time.
+- A deadline stated as a window and a fixed local time, for example "within
+  5 minutes, by 3:45 PM".
 - Any message from the member in that channel, posted after the pose, stops
   the clock. That includes a reply to the pose message's last line, "If this
   one doesn't work for you, just let us know and we'll send another." A member
@@ -61,10 +62,10 @@ three-ID handoff, on the same client production builds.
 ## Timers Live In Memory
 
 Timers are not persisted. **A restart or deploy drops every live timer**, and
-no expiry message is sent for those poses. The pose message shows its deadline
-as a time and a relative time ("by 3:45 PM (10 minutes ago)"), so a lost timer
-is visible in the channel rather than silent. If that happens, the admin runs
-`/pose` again, which is the manual process the bot replaced.
+no expiry message is sent for those poses. The pose message states its window
+and a fixed deadline and is never edited, so nothing in the channel changes when
+a timer is lost: the deadline passes with no expiry under it. If that happens,
+the admin runs `/pose` again, which is the manual process the bot replaced.
 
 ## Getting Started
 
