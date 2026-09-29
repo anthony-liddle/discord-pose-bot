@@ -169,6 +169,13 @@ With `ADMIN_ROLE_ID` unset, it reads "Tag an admin" instead of "Tag @Admin".
     - One line, `Uid:	1000	1000	1000	1000`. A `0` means it runs as root.
     - `fly status` shows exactly one machine, started.
 
+18. **The machine stays up with nothing to do.** Deploy, then issue nothing
+    for ten minutes.
+    - `fly status` still shows the machine started. A machine that has stopped
+      by itself means a service block is back in `fly.toml`; `pnpm test`
+      catches that.
+    - Then issue a pose and let it expire. The expiry arrives on time.
+
 ## Before Relying On It At PNWKC
 
 - Open a real test ticket and confirm the bot's role carries into it.

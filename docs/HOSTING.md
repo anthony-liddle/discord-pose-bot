@@ -291,37 +291,30 @@ Success: `fly auth whoami` prints your email.
 
 ### 7.2 Create The App
 
-From the repository root. Back up `fly.toml` first, because `fly launch`
-rewrites it:
+`fly.toml` is committed with the real app name and everything Fly needs.
+**Do not run `fly launch`.** It rewrites `fly.toml` and adds an
+`[http_service]` block that stops the machine whenever no HTTP requests
+arrive, which for a bot that listens on no port is always. That is what took
+the bot down on its first deploy: Fly stopped the machine minutes after a pose
+was issued, the timer died with it, and `/pose` answered "The application did
+not respond". The theme bot's runbook also used `fly launch` and relied on a
+diff against a backup to catch the block; the diff step is easy to skip.
+
+Create the app without touching the file:
 
 ```bash
-cp fly.toml fly.toml.bak
-fly launch --no-deploy
+fly apps create discord-pose-bot
 ```
 
-- **App name**: pick a globally unique name and write it down.
-- **Region**: `sjc` or whatever is closest. There is no volume, so the region
-  only affects latency.
-- **Databases**: no to all.
-- **Deploy now**: no.
+If the name is taken, pick another, change the `app` line in `fly.toml`, and
+commit that one-line change.
 
-Then diff:
+Success: `fly apps list` shows the app, and `git status` shows `fly.toml`
+unchanged.
 
-```bash
-diff fly.toml.bak fly.toml
-```
-
-**Delete any `[http_service]` block it added.** This bot is a worker that
-listens on no port. With a service defined, Fly stops the machine when no HTTP
-requests arrive, and none ever will, so `/pose` silently stops answering.
-
-**Keep the `[env]` block**, including `POSE_TIMEOUT_MINUTES = '5'`. It is not a
-secret, so it lives in `fly.toml` rather than in Fly's secret store.
-
-There is **no `[[mounts]]` block and no volume**. Nothing persists. If
-`fly launch` offers to create a volume, decline.
-
-Commit the updated `fly.toml` with the real app name.
+There is **no service, no `[[mounts]]` block and no volume**. Nothing listens
+and nothing persists. `pnpm test` includes a check that fails if an
+`[http_service]` or `[[services]]` block ever appears in `fly.toml`.
 
 ### 7.3 Set The Secrets
 
@@ -374,8 +367,13 @@ Then:
 fly status
 ```
 
-It should show **one** machine, **started**. `stopped` means an
-`[http_service]` block survived; go back to 7.2.
+It should show **one** machine, **started**. `stopped` means a service block
+is in `fly.toml`; remove it, confirm `pnpm test` passes, and deploy again.
+
+**Check again a few minutes later, with nothing going on.** Fly only stops a
+machine on its own when a service is defined, so `fly status` after a quiet
+stretch should still show the machine **started**. A machine that has stopped
+by itself means a service block crept back in.
 
 Then confirm the bot runs as the `node` user, not root. `fly ssh console -C id`
 will **not** tell you: `fly ssh` logs in as root by default, so it reports the
