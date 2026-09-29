@@ -14,16 +14,6 @@ function shortTime(ms: number): string {
   return `<t:${unixSeconds(ms)}:t>`;
 }
 
-/**
- * Live relative time. "in 5 minutes", later "10 minutes ago". Used only in the
- * admin's ephemeral confirmation. The pose message itself carries no relative
- * time: it kept counting up after every expiry and response, which read as
- * broken.
- */
-function relativeTime(ms: number): string {
-  return `<t:${unixSeconds(ms)}:R>`;
-}
-
 function user(id: string): string {
   return `<@${id}>`;
 }
@@ -76,15 +66,18 @@ export function expiryMessage(
   return `${user(targetId)} That pose has expired. ${who} whenever you're ready and we'll send you a new one 💛`;
 }
 
+/**
+ * The admin's ephemeral confirmation. It carries no deadline: the pose message
+ * directly below it states one, and a relative timestamp here kept counting
+ * after expiry, so it read "27 seconds ago" under a finished pose.
+ */
 export function poseConfirmation(
   targetId: string,
   pose: string,
-  deadline: number,
   replaced: boolean,
 ): string {
   const lines = [
     `Posted a pose for ${user(targetId)}: **${escapeMarkdown(pose)}**`,
-    `It expires ${relativeTime(deadline)} unless they post in this channel first.`,
   ];
   if (replaced) {
     lines.push('This replaced the pose that was still live in this channel.');

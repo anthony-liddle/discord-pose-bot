@@ -34,12 +34,6 @@ describe('pose message', () => {
     );
   });
 
-  it('carries no relative timestamp, which would count up after expiry', () => {
-    for (const minutes of [1, 5, 60]) {
-      expect(copy.poseMessage('1', 'X.', 1000, minutes)).not.toContain(':R>');
-    }
-  });
-
   it('ends every pose message, random or custom, on the accessibility line', () => {
     for (const pose of ['Touch your nose with one finger.', 'Wave **twice**']) {
       const lines = copy.poseMessage('1', pose, 1000, 5).split('\n');
@@ -79,6 +73,21 @@ describe('superseded pose reply', () => {
   it('tells the admin the member already has a newer pose', () => {
     expect(copy.poseSuperseded('123')).toBe(
       '<@123> already has a newer pose in this channel, so yours was struck through.',
+    );
+  });
+});
+
+describe('admin confirmation', () => {
+  it('names the member and the pose, with no deadline of its own', () => {
+    expect(copy.poseConfirmation('123', 'Give a thumbs up.', false)).toBe(
+      'Posted a pose for <@123>: **Give a thumbs up.**',
+    );
+  });
+
+  it('adds one line when it replaced a live pose', () => {
+    expect(copy.poseConfirmation('123', 'Give a thumbs up.', true)).toBe(
+      'Posted a pose for <@123>: **Give a thumbs up.**\n' +
+        'This replaced the pose that was still live in this channel.',
     );
   });
 });
@@ -140,30 +149,78 @@ describe('length budget', () => {
       1000,
     );
     expect(
-      copy.poseConfirmation(LONGEST_ID, worstPose, FAR_DEADLINE, true).length,
+      copy.poseConfirmation(LONGEST_ID, worstPose, true).length,
     ).toBeLessThan(1000);
   });
 });
 
-describe('no em dashes', () => {
-  function everyString(value: unknown): string[] {
-    if (typeof value === 'string') return [value];
-    if (typeof value === 'function') {
-      // Call each formatter with long, plausible arguments so the static text
-      // around the interpolations is exercised.
-      const out = (value as (...args: unknown[]) => unknown)(
-        LONGEST_ID,
-        'Give a thumbs up.',
-        FAR_DEADLINE,
-        true,
-      );
-      return typeof out === 'string' ? [out] : [];
-    }
-    return [];
-  }
+/**
+ * Argument sets that, between them, reach every variant of every formatter:
+ * both timeout wordings, both confirmation variants, the expiry with and
+ * without a role, and each branch of the send-failure text. A formatter that
+ * ignores the extra arguments simply renders the same string more than once.
+ */
+const ARGUMENT_SETS: unknown[][] = [
+  [LONGEST_ID, 'Give a thumbs up.', FAR_DEADLINE, 5],
+  [LONGEST_ID, 'Give a thumbs up.', FAR_DEADLINE, 1],
+  [LONGEST_ID, 'Give a thumbs up.', true],
+  [LONGEST_ID, 'Give a thumbs up.', false],
+  [LONGEST_ID, undefined],
+  [LONGEST_ID, LONGEST_ID],
+  [{ code: 50013, message: 'Missing Permissions' }],
+  [{ code: 50001 }],
+  [new Error('socket hang up')],
+  [MAX_POSE_LENGTH],
+];
 
+/**
+ * Renders every exported string and every exported formatter of copy.ts, so
+ * a new formatter is covered the moment it is exported.
+ */
+function renderEveryExport(): Array<{ name: string; text: string }> {
+  const rendered: Array<{ name: string; text: string }> = [];
+  for (const [name, value] of Object.entries(copy)) {
+    if (typeof value === 'string') {
+      rendered.push({ name, text: value });
+    } else if (typeof value === 'function') {
+      const formatter = value as (...args: unknown[]) => unknown;
+      for (const args of ARGUMENT_SETS) {
+        let out: unknown;
+        try {
+          out = formatter(...args);
+        } catch {
+          // An argument set of the wrong shape for this formatter. The
+          // coverage test below proves every formatter still rendered once.
+          continue;
+        }
+        if (typeof out === 'string') rendered.push({ name, text: out });
+      }
+    }
+  }
+  return rendered;
+}
+
+describe('no relative timestamps', () => {
+  // A relative timestamp keeps counting after the moment it names, so "in 5
+  // minutes" becomes "27 seconds ago" under an expired pose. No message may
+  // carry one.
+  it('renders at least one string from every exported formatter', () => {
+    const names = new Set(renderEveryExport().map((r) => r.name));
+    for (const [name, value] of Object.entries(copy)) {
+      if (typeof value === 'function') expect(names).toContain(name);
+    }
+  });
+
+  it('appears in no exported string or rendered formatter, in any variant', () => {
+    for (const { name, text } of renderEveryExport()) {
+      expect(text, name).not.toContain(':R>');
+    }
+  });
+});
+
+describe('no em dashes', () => {
   it('appears in no user-facing string', () => {
-    const strings = Object.values(copy).flatMap(everyString);
+    const strings = renderEveryExport().map((r) => r.text);
     expect(strings.length).toBeGreaterThan(5);
     for (const text of strings) {
       expect(text).not.toContain(EM_DASH);

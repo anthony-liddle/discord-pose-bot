@@ -91,5 +91,5 @@ export async function handlePose(
     await reply(copy.poseSuperseded(target.id));
     return;
   }
-  await reply(copy.poseConfirmation(target.id, pose, deadline, replaced));
+  await reply(copy.poseConfirmation(target.id, pose, replaced));
 }

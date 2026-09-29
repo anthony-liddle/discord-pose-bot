@@ -240,7 +240,9 @@ describe('confirmation', () => {
     const { interaction, raw } = fakeInteraction();
     await handlePose(interaction, makeDeps().deps);
     const reply = lastEditReply(raw);
-    expect(reply.content).toMatch(/Posted a pose for <@member-1>/);
+    expect(reply.content).toBe(
+      'Posted a pose for <@member-1>: **Give a thumbs up.**',
+    );
     expect(reply.allowedMentions).toEqual({ parse: [] });
   });
 
