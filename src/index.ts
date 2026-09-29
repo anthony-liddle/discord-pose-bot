@@ -27,7 +27,6 @@ try {
 
 const client = createClient();
 const actions = makeDiscordActions(client, config.adminRoleId);
-const timeoutMs = config.timeoutMinutes * 60 * 1000;
 
 const sessions = createPoseSessions({
   scheduler: {
@@ -50,7 +49,7 @@ wireBot(client, {
       poses,
       random: Math.random,
       now: () => Date.now(),
-      timeoutMs,
+      timeoutMinutes: config.timeoutMinutes,
       log: logEvent,
     }),
 });

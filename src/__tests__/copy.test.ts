@@ -14,19 +14,35 @@ const LONGEST_ID = '1'.repeat(20);
 const FAR_DEADLINE = Date.UTC(2999, 0, 1);
 
 describe('pose message', () => {
-  it('pings the member, bolds the pose, renders the deadline twice and closes on the accessibility line', () => {
+  it('pings the member, bolds the pose, states the window and a fixed deadline, and closes on the accessibility line', () => {
     const deadline = Date.UTC(2026, 8, 28, 22, 45, 0);
     const seconds = deadline / 1000;
-    expect(copy.poseMessage('123', 'Give a thumbs up.', deadline)).toBe(
+    expect(copy.poseMessage('123', 'Give a thumbs up.', deadline, 5)).toBe(
       `<@123> Here's your pose for the selfie: **Give a thumbs up.**\n` +
-        `Post it in this channel by <t:${seconds}:t> (<t:${seconds}:R>).\n` +
+        `Post it in this channel within 5 minutes, by <t:${seconds}:t>.\n` +
         `If this one doesn't work for you, just let us know and we'll send another.`,
     );
   });
 
+  it('says "1 minute", singular, when the window is one minute', () => {
+    const deadline = Date.UTC(2026, 8, 28, 22, 45, 0);
+    const seconds = deadline / 1000;
+    expect(copy.poseMessage('123', 'Give a thumbs up.', deadline, 1)).toBe(
+      `<@123> Here's your pose for the selfie: **Give a thumbs up.**\n` +
+        `Post it in this channel within 1 minute, by <t:${seconds}:t>.\n` +
+        `If this one doesn't work for you, just let us know and we'll send another.`,
+    );
+  });
+
+  it('carries no relative timestamp, which would count up after expiry', () => {
+    for (const minutes of [1, 5, 60]) {
+      expect(copy.poseMessage('1', 'X.', 1000, minutes)).not.toContain(':R>');
+    }
+  });
+
   it('ends every pose message, random or custom, on the accessibility line', () => {
     for (const pose of ['Touch your nose with one finger.', 'Wave **twice**']) {
-      const lines = copy.poseMessage('1', pose, 1000).split('\n');
+      const lines = copy.poseMessage('1', pose, 1000, 5).split('\n');
       expect(lines[lines.length - 1]).toBe(copy.ACCESSIBILITY_LINE);
       expect(lines[lines.length - 1]).toBe(
         "If this one doesn't work for you, just let us know and we'll send another.",
@@ -35,11 +51,11 @@ describe('pose message', () => {
   });
 
   it('rounds a deadline with milliseconds up to the next whole second', () => {
-    expect(copy.poseMessage('1', 'X.', 1_000_500)).toContain('<t:1001:t>');
+    expect(copy.poseMessage('1', 'X.', 1_000_500, 5)).toContain('<t:1001:t>');
   });
 
   it('escapes markdown in a custom pose so it cannot break the bold', () => {
-    const text = copy.poseMessage('1', 'Hold **two** fingers_up', 1000);
+    const text = copy.poseMessage('1', 'Hold **two** fingers_up', 1000, 5);
     expect(text).toContain('**Hold \\*\\*two\\*\\* fingers\\_up**');
   });
 });
@@ -109,7 +125,7 @@ describe('length budget', () => {
   const worstPose = '*'.repeat(MAX_POSE_LENGTH); // every character escaped
 
   it('keeps the longest possible pose message well under 2000', () => {
-    const text = copy.poseMessage(LONGEST_ID, worstPose, FAR_DEADLINE);
+    const text = copy.poseMessage(LONGEST_ID, worstPose, FAR_DEADLINE, 60);
     expect(text.length).toBeLessThan(1000);
   });
 

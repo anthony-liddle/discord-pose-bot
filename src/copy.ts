@@ -14,7 +14,12 @@ function shortTime(ms: number): string {
   return `<t:${unixSeconds(ms)}:t>`;
 }
 
-/** Live relative time. "in 5 minutes", later "10 minutes ago". */
+/**
+ * Live relative time. "in 5 minutes", later "10 minutes ago". Used only in the
+ * admin's ephemeral confirmation. The pose message itself carries no relative
+ * time: it kept counting up after every expiry and response, which read as
+ * broken.
+ */
 function relativeTime(ms: number): string {
   return `<t:${unixSeconds(ms)}:R>`;
 }
@@ -39,14 +44,19 @@ export function escapeMarkdown(text: string): string {
 export const ACCESSIBILITY_LINE =
   "If this one doesn't work for you, just let us know and we'll send another.";
 
+function minutes(n: number): string {
+  return n === 1 ? '1 minute' : `${n} minutes`;
+}
+
 export function poseMessage(
   targetId: string,
   pose: string,
   deadline: number,
+  timeoutMinutes: number,
 ): string {
   return (
     `${user(targetId)} Here's your pose for the selfie: **${escapeMarkdown(pose)}**\n` +
-    `Post it in this channel by ${shortTime(deadline)} (${relativeTime(deadline)}).\n` +
+    `Post it in this channel within ${minutes(timeoutMinutes)}, by ${shortTime(deadline)}.\n` +
     ACCESSIBILITY_LINE
   );
 }

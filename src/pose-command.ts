@@ -9,7 +9,8 @@ export interface PoseCommandDeps {
   poses: readonly string[];
   random: () => number;
   now: () => number;
-  timeoutMs: number;
+  /** POSE_TIMEOUT_MINUTES. Sets the deadline and is named in the message. */
+  timeoutMinutes: number;
   log: LogEvent;
 }
 
@@ -61,12 +62,12 @@ export async function handlePose(
   const pose =
     custom ??
     pickPose(deps.poses, deps.sessions.lastPose(channelId), deps.random);
-  const deadline = deps.now() + deps.timeoutMs;
+  const deadline = deps.now() + deps.timeoutMinutes * 60 * 1000;
 
   let message: Pick<Message, 'id'>;
   try {
     message = await channel.send({
-      content: copy.poseMessage(target.id, pose, deadline),
+      content: copy.poseMessage(target.id, pose, deadline, deps.timeoutMinutes),
       allowedMentions: { parse: [], users: [target.id] },
     });
   } catch (err) {

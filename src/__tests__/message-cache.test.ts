@@ -173,7 +173,7 @@ describe('issue, replace and expire all work by reference with the cache off', (
       ],
       random: () => 0,
       now: () => Date.now(),
-      timeoutMs: 300_000,
+      timeoutMinutes: 5,
       log: vi.fn(),
     };
 

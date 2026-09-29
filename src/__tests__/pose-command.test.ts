@@ -94,7 +94,7 @@ function makeDeps(overrides: Partial<PoseCommandDeps> = {}) {
     poses: ['Give a thumbs up.', 'Make a peace sign.'],
     random: () => 0,
     now: () => Date.now(),
-    timeoutMs: TIMEOUT_MS,
+    timeoutMinutes: 5,
     log,
     ...overrides,
   };
@@ -228,8 +228,8 @@ describe('the pose message', () => {
     await handlePose(interaction, deps);
     const seconds = (Date.now() + TIMEOUT_MS) / 1000;
     const payload = send.mock.calls[0][0] as { content: string };
-    expect(payload.content).toContain(`<t:${seconds}:t>`);
-    expect(payload.content).toContain(`<t:${seconds}:R>`);
+    expect(payload.content).toContain(`within 5 minutes, by <t:${seconds}:t>.`);
+    expect(payload.content).not.toContain(':R>');
     await vi.advanceTimersByTimeAsync(TIMEOUT_MS);
     expect(sendExpiry).toHaveBeenCalledTimes(1);
   });
