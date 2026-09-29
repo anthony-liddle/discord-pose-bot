@@ -44,7 +44,8 @@ With `ADMIN_ROLE_ID` unset, it reads "Tag an admin" instead of "Tag @Admin".
 ## Core Flow
 
 1. **Issue a pose.** Run `/pose user:<member>`.
-   - Your ephemeral confirmation appears.
+   - Your ephemeral confirmation reads "Posted a pose for @member: **{pose}**",
+     with no deadline of its own.
    - The pose message pings only the member and reads as above.
    - The deadline line names the window from `POSE_TIMEOUT_MINUTES` ("within
      1 minute" with the setup above) and a fixed local time.
@@ -56,6 +57,7 @@ With `ADMIN_ROLE_ID` unset, it reads "Tag an admin" instead of "Tag @Admin".
      account that holds the role.
    - The pose message is unchanged after expiry: no edit, and the deadline
      line reads exactly as it did.
+   - Your confirmation, if still open, also reads exactly as it did.
    - This also shows the bot's own pose message does not stop the clock.
    - Log: `event=pose_expired`.
 3. **Respond in time.** Issue a pose. The member posts anything, text or image,
@@ -75,8 +77,8 @@ With `ADMIN_ROLE_ID` unset, it reads "Tag an admin" instead of "Tag @Admin".
    - The first message is edited to the struck-through pose and "This pose was
      replaced. Use the one below.", with no accessibility line, and pings no
      one.
-   - The second message is a different pose. Your confirmation says it replaced
-     one.
+   - The second message is a different pose. Your confirmation adds "This
+     replaced the pose that was still live in this channel."
    - **Exactly one** expiry arrives, for the second pose, at its deadline.
    - Logs: `event=pose_replaced`, then `event=pose_expired`.
 6. **Two admins at once (best effort).** Two admin accounts run `/pose` in the
