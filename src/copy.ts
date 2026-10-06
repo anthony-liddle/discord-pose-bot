@@ -19,6 +19,15 @@ function user(id: string): string {
 }
 
 /**
+ * Who the member should tag: the Admin role's mention when ADMIN_ROLE_ID is
+ * set, plain text otherwise. Every message that names the admins builds it
+ * here, so they cannot drift apart.
+ */
+function admin(adminRoleId: string | undefined): string {
+  return adminRoleId ? `<@&${adminRoleId}>` : 'an admin';
+}
+
+/**
  * Custom poses are admin-typed free text. Escape the characters that would
  * otherwise close the bold or start some other formatting.
  */
@@ -62,8 +71,7 @@ export function expiryMessage(
   targetId: string,
   adminRoleId: string | undefined,
 ): string {
-  const who = adminRoleId ? `Tag <@&${adminRoleId}>` : 'Tag an admin';
-  return `${user(targetId)} That pose has expired. ${who} whenever you're ready and we'll send you a new one 💛`;
+  return `${user(targetId)} That pose has expired. Tag ${admin(adminRoleId)} whenever you're ready and we'll send you a new one 💛`;
 }
 
 /**
