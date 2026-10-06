@@ -50,6 +50,7 @@ wireBot(client, {
       random: Math.random,
       now: () => Date.now(),
       timeoutMinutes: config.timeoutMinutes,
+      adminRoleId: config.adminRoleId,
       log: logEvent,
     }),
 });

@@ -52,10 +52,11 @@ export function poseMessage(
   pose: string,
   deadline: number,
   timeoutMinutes: number,
+  adminRoleId: string | undefined,
 ): string {
   return (
     `${user(targetId)} Here's your pose for the selfie: **${escapeMarkdown(pose)}**\n` +
-    `Post it in this channel within ${minutes(timeoutMinutes)}, by ${shortTime(deadline)}.\n` +
+    `Post it in this channel within ${minutes(timeoutMinutes)}, by ${shortTime(deadline)}, and tag ${admin(adminRoleId)}.\n` +
     ACCESSIBILITY_LINE
   );
 }

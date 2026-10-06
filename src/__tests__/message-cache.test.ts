@@ -174,6 +174,7 @@ describe('issue, replace and expire all work by reference with the cache off', (
       random: () => 0,
       now: () => Date.now(),
       timeoutMinutes: 5,
+      adminRoleId: undefined,
       log: vi.fn(),
     };
 

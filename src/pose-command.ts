@@ -11,6 +11,11 @@ export interface PoseCommandDeps {
   now: () => number;
   /** POSE_TIMEOUT_MINUTES. Sets the deadline and is named in the message. */
   timeoutMinutes: number;
+  /**
+   * ADMIN_ROLE_ID. The pose message asks the member to tag this role, so the
+   * ping comes from the member's own tag, never from the bot.
+   */
+  adminRoleId: string | undefined;
   log: LogEvent;
 }
 
@@ -67,7 +72,14 @@ export async function handlePose(
   let message: Pick<Message, 'id'>;
   try {
     message = await channel.send({
-      content: copy.poseMessage(target.id, pose, deadline, deps.timeoutMinutes),
+      content: copy.poseMessage(
+        target.id,
+        pose,
+        deadline,
+        deps.timeoutMinutes,
+        deps.adminRoleId,
+      ),
+      // The member only. The Admin role still renders as a pill to tag.
       allowedMentions: { parse: [], users: [target.id] },
     });
   } catch (err) {

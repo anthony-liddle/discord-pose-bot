@@ -2,7 +2,7 @@ type Env = Record<string, string | undefined>;
 
 export interface BotConfig {
   token: string;
-  /** The Admin role named, without a ping, in the expiry message. */
+  /** The Admin role named, without a ping, in the pose and expiry messages. */
   adminRoleId: string | undefined;
   timeoutMinutes: number;
 }

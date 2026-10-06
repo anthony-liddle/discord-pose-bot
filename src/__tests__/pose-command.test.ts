@@ -95,6 +95,7 @@ function makeDeps(overrides: Partial<PoseCommandDeps> = {}) {
     random: () => 0,
     now: () => Date.now(),
     timeoutMinutes: 5,
+    adminRoleId: undefined,
     log,
     ...overrides,
   };
@@ -194,6 +195,21 @@ describe('the pose message', () => {
     expect(payload.content.startsWith('<@member-1> ')).toBe(true);
   });
 
+  it('shows the Admin role to tag without pinging it', async () => {
+    const { interaction, send } = fakeInteraction();
+    await handlePose(interaction, makeDeps({ adminRoleId: 'role-1' }).deps);
+    const payload = send.mock.calls[0][0] as {
+      content: string;
+      allowedMentions: unknown;
+    };
+    expect(payload.content).toContain(', and tag <@&role-1>.');
+    // Exact, so neither parse: ['roles'] nor roles: ['role-1'] gets through.
+    expect(payload.allowedMentions).toEqual({
+      parse: [],
+      users: ['member-1'],
+    });
+  });
+
   it('uses the custom text when given', async () => {
     const { interaction, send } = fakeInteraction({
       custom: '  Wave at the camera.  ',
@@ -228,7 +244,7 @@ describe('the pose message', () => {
     await handlePose(interaction, deps);
     const seconds = (Date.now() + TIMEOUT_MS) / 1000;
     const payload = send.mock.calls[0][0] as { content: string };
-    expect(payload.content).toContain(`within 5 minutes, by <t:${seconds}:t>.`);
+    expect(payload.content).toContain(`within 5 minutes, by <t:${seconds}:t>,`);
     expect(payload.content).not.toContain(':R>');
     await vi.advanceTimersByTimeAsync(TIMEOUT_MS);
     expect(sendExpiry).toHaveBeenCalledTimes(1);
