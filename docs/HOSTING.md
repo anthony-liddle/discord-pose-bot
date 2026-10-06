@@ -148,8 +148,9 @@ Deliberately not needed:
 
 - **Manage Messages.** Striking through a replaced pose edits the bot's own
   message, which any author can do.
-- **Mention Everyone.** The expiry message names the Admin role without pinging
-  it. The mention still renders as `@Admin`; allowed mentions stop the ping.
+- **Mention Everyone.** The pose and expiry messages name the Admin role
+  without pinging it. The mention still renders as `@Admin`; allowed mentions
+  stop the ping.
 - **Embed Links, Attach Files, Add Reactions, Manage Channels, Manage Roles.**
   The bot does none of these.
 - **Anything for the slash command itself.** Replying to an interaction needs no
@@ -324,9 +325,9 @@ fly secrets set ADMIN_ROLE_ID=<the PNWKC Admin role ID>
 ```
 
 `ADMIN_ROLE_ID` is optional and not really secret; keeping it in secrets keeps
-the server's role ID out of the repository. Without it the expiry message says
-"Tag an admin" in plain text. Find the ID with Developer Mode on: Server
-Settings, Roles, right-click Admin, **Copy Role ID**.
+the server's role ID out of the repository. Without it the pose and expiry
+messages say "an admin" in plain text. Find the ID with Developer Mode on:
+Server Settings, Roles, right-click Admin, **Copy Role ID**.
 
 `CLIENT_ID` and `GUILD_ID` are not needed on Fly. The running bot does not use
 them; only registration does.

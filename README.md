@@ -28,7 +28,9 @@ still does the actual ID match. The bot only hands out poses and runs the clock.
 - Running `/pose` again in the same channel replaces the live pose, strikes the
   old one through, and restarts the clock. Only one expiry can ever fire per
   channel.
-- Pings only the member, on every message it sends.
+- Pings only the member, on every message it sends. The pose message asks the
+  member to tag @Admin when they post, so admins are notified by the member's
+  own tag rather than by the bot.
 
 ## Privacy
 
@@ -88,7 +90,7 @@ permissions, and deploying to Fly, is in [docs/HOSTING.md](docs/HOSTING.md).
 | `DISCORD_TOKEN`        | yes          | Bot token.                                                                          |
 | `CLIENT_ID`            | for register | Application ID.                                                                     |
 | `GUILD_ID`             | for register | The server `/pose` is registered to.                                                |
-| `ADMIN_ROLE_ID`        | no           | Role named, without a ping, in the expiry message. Unset: "Tag an admin".           |
+| `ADMIN_ROLE_ID`        | no           | Role named, without a ping, in the pose and expiry messages. Unset: "an admin".     |
 | `POSE_TIMEOUT_MINUTES` | no           | Whole number from 1 to 60. Default 5. The bot refuses to start on an invalid value. |
 
 ## Project Structure

@@ -26,7 +26,7 @@ simulate.
 Pose message, random or custom:
 
 > @member Here's your pose for the selfie: **{pose}**
-> Post it in this channel within {n} minutes, by {time}.
+> Post it in this channel within {n} minutes, by {time}, and tag @Admin.
 > If this one doesn't work for you, just let us know and we'll send another.
 
 Replaced pose, after a newer `/pose`:
@@ -39,7 +39,9 @@ Expiry, as a reply to the pose message:
 > @member That pose has expired. Tag @Admin whenever you're ready and we'll send
 > you a new one 💛
 
-With `ADMIN_ROLE_ID` unset, it reads "Tag an admin" instead of "Tag @Admin".
+With `ADMIN_ROLE_ID` unset, both messages say "an admin" in plain text where
+they show @Admin: "and tag an admin" in the pose message, "Tag an admin" in the
+expiry.
 
 ## Core Flow
 
@@ -48,9 +50,20 @@ With `ADMIN_ROLE_ID` unset, it reads "Tag an admin" instead of "Tag @Admin".
      with no deadline of its own.
    - The pose message pings only the member and reads as above.
    - The deadline line names the window from `POSE_TIMEOUT_MINUTES` ("within
-     1 minute" with the setup above) and a fixed local time.
+     1 minute" with the setup above) and a fixed local time, and ends "and tag
+     @Admin."
    - **The accessibility line is the last line**, after the deadline line.
    - Log: `event=pose_issued`.
+   - **@Admin shows but does not notify.** With `ADMIN_ROLE_ID` set to a role
+     your admin account holds, the pose message shows the @Admin pill, and
+     that account gets no mention or notification from it.
+   - **The member's own tag does notify.** First confirm the role allows the
+     member to mention it: in Server Settings, Roles, open the role and check
+     "Allow anyone to @mention this role" on the Display tab. Without it the
+     member's tag fails for a reason that has nothing to do with the bot. Then
+     the member posts a message that tags @Admin. Your admin account gets the
+     mention. This also answers the pose, so `event=pose_answered` follows and
+     no expiry arrives.
 2. **Let it expire.** Issue a pose and wait out the timer without responding.
    - The expiry arrives on time, as a reply to the pose message.
    - It pings the member. `@Admin` renders but does not ping; check from an
