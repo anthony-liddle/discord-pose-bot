@@ -198,13 +198,15 @@ describe('length budget', () => {
 
 /**
  * Argument sets that, between them, reach every variant of every formatter:
- * both timeout wordings, both confirmation variants, the expiry with and
- * without a role, and each branch of the send-failure text. A formatter that
- * ignores the extra arguments simply renders the same string more than once.
+ * both timeout wordings, the pose message with and without a role, both
+ * confirmation variants, the expiry with and without a role, and each branch
+ * of the send-failure text. A formatter that ignores the extra arguments
+ * simply renders the same string more than once.
  */
 const ARGUMENT_SETS: unknown[][] = [
   [LONGEST_ID, 'Give a thumbs up.', FAR_DEADLINE, 5],
   [LONGEST_ID, 'Give a thumbs up.', FAR_DEADLINE, 1],
+  [LONGEST_ID, 'Give a thumbs up.', FAR_DEADLINE, 5, LONGEST_ID],
   [LONGEST_ID, 'Give a thumbs up.', true],
   [LONGEST_ID, 'Give a thumbs up.', false],
   [LONGEST_ID, undefined],
