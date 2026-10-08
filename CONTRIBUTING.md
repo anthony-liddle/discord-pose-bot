@@ -32,8 +32,7 @@ the admin team's agreement, and is judged against these rules:
 - **Face match still holds.** The admin matches the selfie against the ID
   photo, a neutral frontal face. Nothing that hides the eyes or distorts the
   face compared with that photo.
-- **Props are held beside the face**, so the object is in frame with the face.
-  No "in your hand" variants.
+- **No props.** A pose uses the member's free hand and face, nothing else.
 - **Every pair of poses must be distinguishable in a photo.** Picture the pair
   as a mirrored, frontal, arm's-length selfie. Finger count counts as a
   difference, so "one finger" and "two fingers" at the same spot are two poses.
@@ -45,7 +44,7 @@ the admin team's agreement, and is judged against these rules:
   tell which side was meant. A test enforces this.
 - **Short, plain sentences.**
 
-Finger poses and props are fine. Not every pose works for every member, and
+Finger poses are fine. Not every pose works for every member, and
 that is what the last line of every pose message is for: "If this one doesn't
 work for you, just let us know and we'll send another." A member who cannot do a
 pose says so, which stops the clock, and the admin sends another, with the
